@@ -169,7 +169,8 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-        let cmd = "curl --header \"Content-Type: application/json\" --request POST --data ".heartbeat." http://localhost:3000/api/heartbeat"
+        let cmd = "curl --header \"Content-Type: application/json\" --request POST --data " . heartbeat 
+        cmd = cmd . " http://localhost:3000/api/heartbeat"
 
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
@@ -416,7 +417,6 @@ call s:Init()
 
 " Plugin Commands {{{
 
-    :command -nargs=0 WakaTimeApiKey call s:PromptForApiKey()
     :command -nargs=0 WakaTimeDebugEnable call s:EnableDebugMode()
     :command -nargs=0 WakaTimeDebugDisable call s:DisableDebugMode()
     :command -nargs=0 WakaTimeScreenRedrawDisable call s:DisableScreenRedraw()
