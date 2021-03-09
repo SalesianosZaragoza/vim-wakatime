@@ -40,8 +40,6 @@ let s:VERSION = '8.0.0'
     if s:home == '$WAKATIME_HOME'
         let s:home = expand("$HOME")
     endif
-    let s:cli_location = substitute(substitute(expand("<sfile>:p:h"), '\', '/', 'g'), '/plugin$', '', '') . '/packages/wakatime/cli.py'
-    let s:config_file = s:home . '/.wakatime.cfg'
     let s:default_configs = ['[settings]', 'debug = false', 'hidefilenames = false', 'ignore =', '    COMMIT_EDITMSG$', '    PULLREQ_EDITMSG$', '    MERGE_MSG$', '    TAG_EDITMSG$']
     let s:data_file = s:home . '/.wakatime.data'
     let s:has_reltime = has('reltime') && localtime() - 1 < split(split(reltimestr(reltime()))[0], '\.')[0]
@@ -68,19 +66,6 @@ let s:VERSION = '8.0.0'
         let s:redraw_setting = 'auto'
         if exists("g:wakatime_ScreenRedraw") && g:wakatime_ScreenRedraw
             let s:redraw_setting = 'enabled'
-        endif
-
-        " Get redraw setting from wakatime.cfg file
-        if s:GetIniSetting('settings', 'vi_redraw') != ''
-            if s:GetIniSetting('settings', 'vi_redraw') == 'enabled'
-                let s:redraw_setting = 'enabled'
-            endif
-            if s:GetIniSetting('settings', 'vi_redraw') == 'auto'
-                let s:redraw_setting = 'auto'
-            endif
-            if s:GetIniSetting('settings', 'vi_redraw') == 'disabled'
-                let s:redraw_setting = 'disabled'
-            endif
         endif
 
         " Buffering heartbeats disabled in Windows, unless have async support
@@ -368,27 +353,22 @@ let s:VERSION = '8.0.0'
     endfunction
 
     function! s:EnableDebugMode()
-        call s:SetIniSetting('settings', 'debug', 'true')
         let s:is_debug_on = s:true
     endfunction
 
     function! s:DisableDebugMode()
-        call s:SetIniSetting('settings', 'debug', 'false')
         let s:is_debug_on = s:false
     endfunction
 
     function! s:EnableScreenRedraw()
-        call s:SetIniSetting('settings', 'vi_redraw', 'enabled')
         let s:redraw_setting = 'enabled'
     endfunction
 
     function! s:EnableScreenRedrawAuto()
-        call s:SetIniSetting('settings', 'vi_redraw', 'auto')
         let s:redraw_setting = 'auto'
     endfunction
 
     function! s:DisableScreenRedraw()
-        call s:SetIniSetting('settings', 'vi_redraw', 'disabled')
         let s:redraw_setting = 'disabled'
     endfunction
 
