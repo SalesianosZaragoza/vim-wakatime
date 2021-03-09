@@ -94,7 +94,6 @@ let s:VERSION = '8.0.0'
 
     function! s:SetupDebugMode()
         if !s:debug_mode_already_setup
-            if s:GetIniSetting('settings', 'debug') == 'true'
                 let s:is_debug_on = s:true
             else
                 let s:is_debug_on = s:false
@@ -407,10 +406,6 @@ let s:VERSION = '8.0.0'
         endif
     endfunction
 
-    function! g:WakaTimeToday()
-        let cmd = s:GetCommandPrefix() + ['--today']
-        echo "Today: " .  s:Chomp(system(s:JoinArgs(cmd)))
-    endfunction
 
 " }}}
 
@@ -440,7 +435,6 @@ call s:Init()
     :command -nargs=0 WakaTimeScreenRedrawDisable call s:DisableScreenRedraw()
     :command -nargs=0 WakaTimeScreenRedrawEnable call s:EnableScreenRedraw()
     :command -nargs=0 WakaTimeScreenRedrawEnableAuto call s:EnableScreenRedrawAuto()
-    :command -nargs=0 WakaTimeToday call g:WakaTimeToday()
 
 " }}}
 
