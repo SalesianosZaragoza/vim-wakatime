@@ -36,12 +36,7 @@ let s:VERSION = '8.0.0'
     endif
 
     " Script Globals
-    let s:home = expand("$WAKATIME_HOME")
-    if s:home == '$WAKATIME_HOME'
-        let s:home = expand("$HOME")
-    endif
     let s:default_configs = ['[settings]', 'debug = false', 'hidefilenames = false', 'ignore =', '    COMMIT_EDITMSG$', '    PULLREQ_EDITMSG$', '    MERGE_MSG$', '    TAG_EDITMSG$']
-    let s:data_file = s:home . '/.wakatime.data'
     let s:has_reltime = has('reltime') && localtime() - 1 < split(split(reltimestr(reltime()))[0], '\.')[0]
     let s:config_file_already_setup = s:false
     let s:debug_mode_already_setup = s:false
@@ -306,14 +301,7 @@ let s:VERSION = '8.0.0'
 
     function! s:GetLastHeartbeat()
         if !s:last_heartbeat.last_activity_at || localtime() - s:last_heartbeat.last_activity_at > s:local_cache_expire
-            if !filereadable(s:data_file)
                 return {'last_activity_at': 0, 'last_heartbeat_at': 0, 'file': ''}
-            endif
-            let last = readfile(s:data_file, '', 3)
-            if len(last) == 3
-                let s:last_heartbeat.last_heartbeat_at = last[1]
-                let s:last_heartbeat.file = last[2]
-            endif
         endif
         return s:last_heartbeat
     endfunction
@@ -328,7 +316,6 @@ let s:VERSION = '8.0.0'
 
     function! s:SetLastHeartbeat(last_activity_at, last_heartbeat_at, file)
         call s:SetLastHeartbeatInMemory(a:last_activity_at, a:last_heartbeat_at, a:file)
-        call writefile([s:n2s(a:last_activity_at), s:n2s(a:last_heartbeat_at), a:file], s:data_file)
     endfunction
 
     function! s:EnoughTimePassed(now, last)
