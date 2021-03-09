@@ -177,7 +177,7 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-        let cmd = 'curl --header "Content-Type: application/json" --request POST --data '.heartbeat.' http://localhost:3000/api/heartbeat'
+        let cmd = "curl --header \"Content-Type: application/json\" --request POST --data ".heartbeat." http://localhost:3000/api/heartbeat"
 
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
