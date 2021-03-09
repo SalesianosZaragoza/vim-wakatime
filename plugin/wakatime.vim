@@ -59,21 +59,6 @@ let s:VERSION = '8.0.0'
 
     function! s:Init()
 
-        " For backwards compatibility, rename wakatime.conf to wakatime.cfg
-        if !filereadable(s:config_file)
-            if filereadable(expand("$HOME/.wakatime"))
-                exec "silent !mv" expand("$HOME/.wakatime") expand("$HOME/.wakatime.conf")
-            endif
-            if filereadable(expand("$HOME/.wakatime.conf"))
-                if !filereadable(s:config_file)
-                    let contents = ['[settings]'] + readfile(expand("$HOME/.wakatime.conf"), '')
-                    call writefile(contents, s:config_file)
-                    call delete(expand("$HOME/.wakatime.conf"))
-                endif
-            endif
-        endif
-
-
         " Set default heartbeat frequency in minutes
         if !exists("g:wakatime_HeartbeatFrequency")
             let g:wakatime_HeartbeatFrequency = 2
@@ -118,22 +103,6 @@ let s:VERSION = '8.0.0'
 
     function! s:SetupConfigFile()
         if !s:config_file_already_setup
-
-            " Create config file if does not exist
-            if !filereadable(s:config_file)
-                call writefile(s:default_configs, s:config_file)
-            endif
-
-            " Make sure config file has api_key
-            let found_api_key = s:false
-            if s:GetIniSetting('settings', 'api_key') != '' || s:GetIniSetting('settings', 'apikey') != ''
-                let found_api_key = s:true
-            endif
-            if !found_api_key
-                call s:PromptForApiKey()
-                echo "[WakaTime] Setup complete! Visit https://wakatime.com to view your coding activity."
-            endif
-
             let s:config_file_already_setup = s:true
         endif
     endfunction
@@ -149,71 +118,6 @@ let s:VERSION = '8.0.0'
         endif
     endfunction
 
-    function! s:GetIniSetting(section, key)
-        if !filereadable(s:config_file)
-            return ''
-        endif
-        let lines = readfile(s:config_file)
-        let currentSection = ''
-        for line in lines
-            let line = s:StripWhitespace(line)
-            if matchstr(line, '^\[') != '' && matchstr(line, '\]$') != ''
-                let currentSection = substitute(line, '^\[\(.\{-}\)\]$', '\1', '')
-            else
-                if currentSection == a:section
-                    let group = split(line, '=')
-                    if len(group) == 2 && s:StripWhitespace(group[0]) == a:key
-                        return s:StripWhitespace(group[1])
-                    endif
-                endif
-            endif
-        endfor
-        return ''
-    endfunction
-
-    function! s:SetIniSetting(section, key, val)
-        let output = []
-        let sectionFound = s:false
-        let keyFound = s:false
-        if filereadable(s:config_file)
-            let lines = readfile(s:config_file)
-            let currentSection = ''
-            for line in lines
-                let entry = s:StripWhitespace(line)
-                if matchstr(entry, '^\[') != '' && matchstr(entry, '\]$') != ''
-                    if currentSection == a:section && !keyFound
-                        let output = output + [join([a:key, a:val], '=')]
-                        let keyFound = s:true
-                    endif
-                    let currentSection = substitute(entry, '^\[\(.\{-}\)\]$', '\1', '')
-                    let output = output + [line]
-                    if currentSection == a:section
-                        let sectionFound = s:true
-                    endif
-                else
-                    if currentSection == a:section
-                        let group = split(entry, '=')
-                        if len(group) == 2 && s:StripWhitespace(group[0]) == a:key
-                            let output = output + [join([a:key, a:val], '=')]
-                            let keyFound = s:true
-                        else
-                            let output = output + [line]
-                        endif
-                    else
-                        let output = output + [line]
-                    endif
-                endif
-            endfor
-        endif
-        if !sectionFound
-            let output = output + [printf('[%s]', a:section), join([a:key, a:val], '=')]
-        else
-            if !keyFound
-                let output = output + [join([a:key, a:val], '=')]
-            endif
-        endif
-        call writefile(output, s:config_file)
-    endfunction
 
     function! s:GetCurrentFile()
         return expand("%:p")
@@ -293,7 +197,7 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-        let cmd = curl --header "Content-Type: application/json" --request POST --data heartbeat http://localhost:3000/api/login
+        let cmd = 'curl --header "Content-Type: application/json" --request POST --data '.heartbeat.' http://localhost:3000/api/heartbeat'
 
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
