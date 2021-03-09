@@ -1,9 +1,7 @@
 " ============================================================================
 " File:        wakatime.vim
 " Description: Automatic time tracking for Vim.
-" Maintainer:  WakaTime <support@wakatime.com>
 " License:     BSD, see LICENSE.txt for more details.
-" Website:     https://wakatime.com/
 " ============================================================================
 
 let s:VERSION = '8.0.0'
@@ -75,10 +73,6 @@ let s:VERSION = '8.0.0'
             endif
         endif
 
-        " Set default python binary location
-        if !exists("g:wakatime_PythonBinary")
-            let g:wakatime_PythonBinary = 'python'
-        endif
 
         " Set default heartbeat frequency in minutes
         if !exists("g:wakatime_HeartbeatFrequency")
@@ -283,46 +277,6 @@ let s:VERSION = '8.0.0'
         endif
     endfunction
 
-    function! s:GetPythonBinary()
-        let python_bin = g:wakatime_PythonBinary
-        if !filereadable(python_bin)
-            let paths = ['python3']
-            if s:IsWindows()
-                let pyver = 39
-                while pyver >= 27
-                    let paths = paths + [printf('/Python%d/pythonw', pyver), printf('/python%d/pythonw', pyver), printf('/Python%d/python', pyver), printf('/python%d/python', pyver)]
-                    let pyver = pyver - 1
-                endwhile
-            else
-                let paths = paths + ['/usr/bin/python3', '/usr/local/bin/python3', '/usr/bin/python3.6', '/usr/local/bin/python3.6', '/usr/bin/python', '/usr/local/bin/python', '/usr/bin/python2', '/usr/local/bin/python2']
-            endif
-            let paths = paths + ['python']
-            let index = 0
-            let limit = len(paths)
-            while index < limit
-                if filereadable(paths[index])
-                    let python_bin = paths[index]
-                    let index = limit
-                endif
-                let index = index + 1
-            endwhile
-        endif
-        if s:IsWindows() && filereadable(printf('%sw', python_bin))
-            let python_bin = printf('%sw', python_bin)
-        endif
-        return python_bin
-    endfunction
-
-    function! s:GetCommandPrefix()
-        if exists("g:wakatime_OverrideCommandPrefix") && g:wakatime_OverrideCommandPrefix != ''
-            let prefix = [g:wakatime_OverrideCommandPrefix]
-        else
-            let python_bin = s:GetPythonBinary()
-            let prefix = [python_bin, '-W', 'ignore', s:cli_location]
-        endif
-        return prefix
-    endfunction
-
     function! s:SendHeartbeats()
         let start_time = localtime()
         let stdout = ''
@@ -339,19 +293,7 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-
-        let cmd = s:GetCommandPrefix() + ['--entity', heartbeat.entity]
-        let cmd = cmd + ['--time', heartbeat.time]
-        let cmd = cmd + ['--plugin', printf('vim/%s vim-wakatime/%s', s:n2s(v:version), s:VERSION)]
-        if heartbeat.is_write
-            let cmd = cmd + ['--write']
-        endif
-        if has_key(heartbeat, 'language')
-            let cmd = cmd + ['--language', heartbeat.language]
-        endif
-        if extra_heartbeats != ''
-            let cmd = cmd + ['--extra-heartbeats']
-        endif
+        let cmd = curl --header "Content-Type: application/json" --request POST --data heartbeat http://localhost:3000/api/login
 
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
@@ -449,6 +391,7 @@ let s:VERSION = '8.0.0'
             if has_key(heartbeat, 'language')
                 let heartbeat_str = heartbeat_str . ', "language": "' . s:JsonEscape(heartbeat.language) . '"'
             endif
+            let heartbeat_str = heartbeat_str . "Today: " .  s:Chomp(system(s:JoinArgs(cmd)))
             let heartbeat_str = heartbeat_str . '}'
             let arr = arr + [heartbeat_str]
             let loop_count = loop_count + 1
@@ -470,12 +413,6 @@ let s:VERSION = '8.0.0'
 
     function! s:NeovimAsyncExitHandler(job_id, exit_code, event)
         let output = s:StripWhitespace(join(s:nvim_async_output, "\n"))
-        if a:exit_code == 104
-            let output .= 'Invalid API Key'
-        endif
-        if (s:is_debug_on || a:exit_code == 103 || a:exit_code == 104) && (a:exit_code != 0 || output != '')
-            echoerr printf('[WakaTime] Error %d: %s', a:exit_code, output)
-        endif
     endfunction
 
     function! s:OrderTime(time_str, loop_count)
@@ -524,17 +461,6 @@ let s:VERSION = '8.0.0'
             return s:true
         endif
         return s:false
-    endfunction
-
-    function! s:PromptForApiKey()
-        let api_key = s:false
-        let api_key = s:GetIniSetting('settings', 'api_key')
-        if api_key == ''
-            let api_key = s:GetIniSetting('settings', 'apikey')
-        endif
-
-        let api_key = inputsecret("[WakaTime] Enter your wakatime.com api key: ", api_key)
-        call s:SetIniSetting('settings', 'api_key', api_key)
     endfunction
 
     function! s:EnableDebugMode()
