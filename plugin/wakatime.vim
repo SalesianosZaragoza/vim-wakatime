@@ -267,7 +267,6 @@ let s:VERSION = '8.0.0'
             if has_key(heartbeat, 'language')
                 let heartbeat_str = heartbeat_str . ', "language": "' . s:JsonEscape(heartbeat.language) . '"'
             endif
-            let heartbeat_str = heartbeat_str . "Today: " .  s:Chomp(system(cmd))
             let heartbeat_str = heartbeat_str . '}'
             let arr = arr + [heartbeat_str]
             let loop_count = loop_count + 1
