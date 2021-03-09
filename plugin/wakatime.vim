@@ -113,14 +113,6 @@ let s:VERSION = '8.0.0'
         return substitute(a:str, '"', '\\"', 'g')
     endfunction
 
-    function! s:JoinArgs(args)
-        let safeArgs = []
-        for arg in a:args
-            let safeArgs = safeArgs + [s:SanitizeArg(arg)]
-        endfor
-        return join(safeArgs, ' ')
-    endfunction
-
     function! s:IsWindows()
         if has('win32') || has('win64')
             return s:true
@@ -189,7 +181,7 @@ let s:VERSION = '8.0.0'
             if s:IsWindows()
                 let job_cmd = [&shell, &shellcmdflag] + cmd
             else
-                let job_cmd = [&shell, &shellcmdflag, s:JoinArgs(cmd)]
+                let job_cmd = [&shell, &shellcmdflag, cmd]
             endif
             let job = job_start(job_cmd, {
                 \ 'stoponexit': '',
@@ -202,7 +194,7 @@ let s:VERSION = '8.0.0'
             if s:IsWindows()
                 let job_cmd = cmd
             else
-                let job_cmd = [&shell, &shellcmdflag, s:JoinArgs(cmd)]
+                let job_cmd = [&shell, &shellcmdflag, cmd]
             endif
             let s:nvim_async_output = ['']
             let job = jobstart(job_cmd, {
@@ -216,25 +208,25 @@ let s:VERSION = '8.0.0'
         elseif s:IsWindows()
             if s:is_debug_on
                 if extra_heartbeats != ''
-                    let stdout = system('(' . s:JoinArgs(cmd) . ')', extra_heartbeats)
+                    let stdout = system('(' . cmd . ')', extra_heartbeats)
                 else
-                    let stdout = system('(' . s:JoinArgs(cmd) . ')')
+                    let stdout = system('(' . cmd . ')')
                 endif
             else
-                exec 'silent !start /b cmd /c "' . s:JoinArgs(cmd) . ' > nul 2> nul"'
+                exec 'silent !start /b cmd /c "' . cmd . ' > nul 2> nul"'
             endif
         else
             if s:is_debug_on
                 if extra_heartbeats != ''
-                    let stdout = system(s:JoinArgs(cmd), extra_heartbeats)
+                    let stdout = system(cmd, extra_heartbeats)
                 else
-                    let stdout = system(s:JoinArgs(cmd))
+                    let stdout = system(cmd)
                 endif
             else
                 if extra_heartbeats != ''
-                    let stdout = system(s:JoinArgs(cmd) . ' &', extra_heartbeats)
+                    let stdout = system(cmd . ' &', extra_heartbeats)
                 else
-                    let stdout = system(s:JoinArgs(cmd) . ' &')
+                    let stdout = system(cmd . ' &')
                 endif
             endif
         endif
@@ -256,7 +248,7 @@ let s:VERSION = '8.0.0'
         endif
 
         if s:is_debug_on && stdout != ''
-            echoerr '[WakaTime] Heartbeat Command: ' . s:JoinArgs(cmd) . "\n[WakaTime] Error: " . stdout
+            echoerr '[WakaTime] Heartbeat Command: ' . cmd . "\n[WakaTime] Error: " . stdout
         endif
     endfunction
 
@@ -275,7 +267,7 @@ let s:VERSION = '8.0.0'
             if has_key(heartbeat, 'language')
                 let heartbeat_str = heartbeat_str . ', "language": "' . s:JsonEscape(heartbeat.language) . '"'
             endif
-            let heartbeat_str = heartbeat_str . "Today: " .  s:Chomp(system(s:JoinArgs(cmd)))
+            let heartbeat_str = heartbeat_str . "Today: " .  s:Chomp(system(cmd))
             let heartbeat_str = heartbeat_str . '}'
             let arr = arr + [heartbeat_str]
             let loop_count = loop_count + 1
@@ -286,7 +278,7 @@ let s:VERSION = '8.0.0'
 
     function! s:AsyncHandler(output, cmd)
         if s:is_debug_on && a:output != ''
-            echoerr '[WakaTime] Heartbeat Command: ' . s:JoinArgs(a:cmd) . "\n[WakaTime] Error: " . a:output
+            echoerr '[WakaTime] Heartbeat Command: ' . a:cmd . "\n[WakaTime] Error: " . a:output
         endif
     endfunction
 
