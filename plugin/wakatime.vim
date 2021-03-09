@@ -94,10 +94,6 @@ let s:VERSION = '8.0.0'
 
     function! s:SetupDebugMode()
         if !s:debug_mode_already_setup
-                let s:is_debug_on = s:true
-            else
-                let s:is_debug_on = s:false
-            endif
             let s:debug_mode_already_setup = s:true
         endif
     endfunction
