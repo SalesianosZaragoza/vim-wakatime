@@ -168,9 +168,8 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-        let cmd = "curl -H \"Content-Type: application/json\" -H \"Authorization: uuid " . s:Chomp(s:token) . "\" --request POST --data '[" . s:JsonEscape(string(heartbeat)) . "]'" 
+        let cmd = "curl -H \"Content-Type: application/json\" -H \"Authorization: uuid " . s:Chomp(s:token) . "\" --request POST --data '" . extra_heartbeats . "'" 
         let cmd = cmd . s:url_server         
-        :echo cmd
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
         if !s:IsWindows()
