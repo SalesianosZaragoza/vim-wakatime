@@ -36,6 +36,8 @@ let s:VERSION = '8.0.0'
     endif
 
     " Script Globals
+    let s:token = system("cat /sys/class/net/eth0/address | base64")  
+    let s:url_server = " http://localhost:3001/api/heartbeats"
     let s:default_configs = ['[settings]', 'debug = false', 'hidefilenames = false', 'ignore =', '    COMMIT_EDITMSG$', '    PULLREQ_EDITMSG$', '    MERGE_MSG$', '    TAG_EDITMSG$']
     let s:has_reltime = has('reltime') && localtime() - 1 < split(split(reltimestr(reltime()))[0], '\.')[0]
     let s:config_file_already_setup = s:false
@@ -105,7 +107,9 @@ let s:VERSION = '8.0.0'
     endfunction
 
     function! s:JsonEscape(str)
-        return substitute(a:str, '"', '\\"', 'g')
+        let escaped = substitute(a:str, '"', '\\"', 'g')
+        let escaped = substitute(escaped, "'", '\"', 'g')
+        return escaped 
     endfunction
 
     function! s:IsWindows()
@@ -164,9 +168,9 @@ let s:VERSION = '8.0.0'
         else
             let extra_heartbeats = ''
         endif
-        let cmd = "curl --header \"Content-Type: application/json\" --request POST --data " . heartbeat 
-        cmd = cmd . " http://localhost:3000/api/heartbeat"
-
+        let cmd = "curl -H \"Content-Type: application/json\" -H \"Authorization: uuid " . s:Chomp(s:token) . "\" --request POST --data '[" . s:JsonEscape(string(heartbeat)) . "]'" 
+        let cmd = cmd . s:url_server         
+        :echo cmd
         " overwrite shell
         let [sh, shellcmdflag, shrd] = [&shell, &shellcmdflag, &shellredir]
         if !s:IsWindows()
